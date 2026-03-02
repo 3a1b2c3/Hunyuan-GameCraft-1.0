@@ -60,7 +60,7 @@ set CFG_SCALE=1.0
 set SEED=42
 set ACTIONS=w a d s
 set SPEEDS=0.2 0.2 0.2 0.2
-set RESOLUTION=960x540
+set RESOLUTION=1-1
 :: ──────────────────────────────────────────────────────────────────────────
 
 :: Parameters
