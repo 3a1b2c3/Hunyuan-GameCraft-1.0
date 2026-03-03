@@ -55,7 +55,7 @@ set NEG_PROMPT=overexposed, low quality, deformation, a poor composition, bad ha
 set HEIGHT=704
 set WIDTH=1216
 set STEPS=8
-set FRAMES=33
+set FRAMES=81
 set CFG_SCALE=1.0
 set SEED=42
 set ACTIONS=w a d s
@@ -69,6 +69,7 @@ if "%OUTPUT_BASE%"=="" set OUTPUT_BASE=results_low_mem
 set NUM_SAMPLES=%~2
 if "%NUM_SAMPLES%"=="" set NUM_SAMPLES=5
 set IMAGE_TYPES=%~3
+if "%IMAGE_TYPES%"=="" set IMAGE_TYPES=scenery,indoor
 
 set VBENCH_OUTPUT_DIR=%OUTPUT_BASE%\videos
 set LOG_FILE=%OUTPUT_BASE%\vbench_run.log
@@ -180,6 +181,8 @@ echo ============================================================
     echo Output base:    %OUTPUT_BASE%
     echo VBench videos:  %VBENCH_OUTPUT_DIR%
     echo Log:            %LOG_FILE%
+    echo FPS log:        %OUTPUT_BASE%\vbench_fps.txt
+    echo Stats CSV:      %OUTPUT_BASE%\vbench_stats.csv
 ) > "%STATS_FILE%"
 
 exit /b %EXIT_CODE%
