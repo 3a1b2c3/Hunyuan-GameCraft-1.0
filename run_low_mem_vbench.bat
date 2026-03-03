@@ -52,8 +52,8 @@ exit /b 0
 :: ── configurable defaults ──────────────────────────────────────────────────
 set CKPT=weights\gamecraft_models\mp_rank_00_model_states_distill.pt
 set NEG_PROMPT=overexposed, low quality, deformation, a poor composition, bad hands, bad teeth, bad eyes, bad limbs, distortion, blurring, text, subtitles, static, picture, black border.
-set HEIGHT=704
-set WIDTH=1216
+set HEIGHT=544
+set WIDTH=960
 set STEPS=8
 set FRAMES=81
 set CFG_SCALE=1.0
@@ -72,13 +72,15 @@ set IMAGE_TYPES=%~3
 if "%IMAGE_TYPES%"=="" set IMAGE_TYPES=scenery,indoor
 
 set VBENCH_OUTPUT_DIR=%OUTPUT_BASE%\videos
-set LOG_FILE=%OUTPUT_BASE%\vbench_run.log
 set STATS_FILE=%OUTPUT_BASE%\vbench_stats.txt
 
 set ROOT=%~dp0
 if "%ROOT:~-1%"=="\" set ROOT=%ROOT:~0,-1%
 
 if not exist "%OUTPUT_BASE%" mkdir "%OUTPUT_BASE%"
+
+for /f "tokens=2 delims==" %%a in ('wmic os get localdatetime /value 2^>nul') do set _DT=%%a
+set LOG_FILE=%OUTPUT_BASE%\vbench_run_%_DT:~0,8%_%_DT:~8,6%.log
 
 :: Validate checkpoint
 if not exist "%ROOT%\%CKPT%" (
@@ -114,8 +116,7 @@ for /f "tokens=1-4 delims=:., " %%a in ("%TIME: =0%") do set /a START_S=(1%%a-10
 set OPTIONAL_ARGS=--num_samples %NUM_SAMPLES% --seed %SEED% --resolution %RESOLUTION%
 if not "%IMAGE_TYPES%"=="" set OPTIONAL_ARGS=%OPTIONAL_ARGS% --image_types "%IMAGE_TYPES%"
 
-:: Truncate log
-type nul > "%LOG_FILE%"
+if not exist "%OUTPUT_BASE%" mkdir "%OUTPUT_BASE%"
 
 echo.
 echo [GC-VBench] Generating %NUM_SAMPLES% samples per prompt...
@@ -127,8 +128,9 @@ python "%ROOT%\scripts\gc_vbench_batch.py" ^
     --steps %STEPS% --frames %FRAMES% --cfg_scale %CFG_SCALE% ^
     --actions %ACTIONS% --speeds %SPEEDS% ^
     %OPTIONAL_ARGS% ^
-    2>&1 | powershell -Command "$input | Tee-Object -Append -FilePath '%LOG_FILE%'"
+    > "%ROOT%\%LOG_FILE%" 2>&1
 set EXIT_CODE=%ERRORLEVEL%
+type "%ROOT%\%LOG_FILE%"
 echo [GC-VBench] Done. Exit: %EXIT_CODE%
 
 :: Record end time
