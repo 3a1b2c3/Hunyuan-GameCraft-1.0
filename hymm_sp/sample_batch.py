@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from loguru import logger
 import torch
@@ -239,11 +240,14 @@ def main():
     ref_latents = raw_ref_latents
     
     # Generate video segments for each action in the action list
+    total_frames_generated = 0
+    gen_start_time = time.time()
     for idx, action_id in enumerate(action_list):
         # Determine if this is the first action and using image start
         is_image = (idx == 0 and args.image_start)
-        
+
         logger.info(f"Generating segment {idx+1}/{len(action_list)} with action ID: {action_id}")
+        seg_t0 = time.time()
         # Generate video segment with the current action
         outputs = hunyuan_video_sampler.predict(
             prompt=prompt,
@@ -273,6 +277,11 @@ def main():
         # Update latents for next iteration (maintain temporal consistency)
         ref_latents = outputs["ref_latents"]
         last_latents = outputs["last_latents"]
+
+        seg_elapsed = time.time() - seg_t0
+        seg_frames = outputs['samples'][0].shape[2] if outputs.get('samples') else args.sample_n_frames
+        total_frames_generated += seg_frames
+        print(f"[{idx+1}/{len(action_list)}] action={action_id}  {seg_frames} frames  {seg_elapsed:.1f}s  {seg_frames/seg_elapsed:.3f} fps  ({seg_elapsed/seg_frames:.2f}s/frame)")
         
         # Save generated video segments if this is the main process (rank 0)
         if rank == 0:
@@ -293,6 +302,12 @@ def main():
             save_path_mp4 = f"{save_path}/{os.path.basename(args.image_path).split('.')[0]}.mp4"
             save_videos_grid(out_cat, save_path_mp4, n_rows=1, fps=24)
             logger.info(f"Saved generated video to: {save_path_mp4}")
+
+    total_elapsed = time.time() - gen_start_time
+    print(f"\n--- generation complete ---")
+    print(f"  total frames : {total_frames_generated}")
+    print(f"  total time   : {total_elapsed:.1f}s")
+    print(f"  avg fps      : {total_frames_generated / total_elapsed:.3f}")
 
 if __name__ == "__main__":
     main()

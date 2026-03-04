@@ -985,7 +985,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline):
                             is_cache = False
                         else:
                             is_cache = True
-                    if latent_model_input.shape[-1]*latent_model_input.shape[-2]>64*112 and cpu_offload:
+                    if latent_model_input.shape[-1]*latent_model_input.shape[-2]>64*112 and cpu_offload and self.do_classifier_free_guidance:
                         if i==0:
                             print(f'cpu_offload={cpu_offload} and \
                                 {latent_model_input.shape[-2:]} is large, split infer noise-pred')

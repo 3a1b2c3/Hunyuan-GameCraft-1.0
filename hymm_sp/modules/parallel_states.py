@@ -83,11 +83,17 @@ def initialize_distributed(seed):
     local_rank = int(os.getenv("RANK", 0))
     world_size = int(os.getenv("WORLD_SIZE", 1))
     torch.cuda.set_device(local_rank)
-    dist.init_process_group(backend="nccl", 
-                            init_method="env://", 
-                            timeout=datetime.timedelta(seconds=2**31-1), 
-                            world_size=world_size, 
-                            rank=local_rank)
+    if world_size == 1:
+        # Single-GPU: use FileStore to avoid TCPStore/libuv requirement
+        import tempfile
+        store = dist.FileStore(tempfile.mktemp(suffix=".dist"), 1)
+        dist.init_process_group(backend="gloo", store=store, world_size=1, rank=0)
+    else:
+        dist.init_process_group(backend="nccl",
+                                init_method="env://",
+                                timeout=datetime.timedelta(seconds=2**31-1),
+                                world_size=world_size,
+                                rank=local_rank)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     initialize_sequence_parallel_state(world_size)
