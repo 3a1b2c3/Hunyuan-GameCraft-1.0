@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 :: Hunyuan-GameCraft-1.0 - VBench Batch Inference
 :: Loops over VBench crop images, generates num_samples videos per prompt,
 :: skips already-generated outputs.
@@ -80,7 +81,7 @@ if "%ROOT:~-1%"=="\" set ROOT=%ROOT:~0,-1%
 if not exist "%OUTPUT_BASE%" mkdir "%OUTPUT_BASE%"
 
 for /f "tokens=2 delims==" %%a in ('wmic os get localdatetime /value 2^>nul') do set _DT=%%a
-set LOG_FILE=%OUTPUT_BASE%\vbench_run_%_DT:~0,8%_%_DT:~8,6%.log
+set LOG_FILE=%ROOT%\%OUTPUT_BASE%\vbench_run_%_DT:~0,8%_%_DT:~8,6%.log
 
 :: Validate checkpoint
 if not exist "%ROOT%\%CKPT%" (
@@ -128,9 +129,9 @@ python "%ROOT%\scripts\gc_vbench_batch.py" ^
     --steps %STEPS% --frames %FRAMES% --cfg_scale %CFG_SCALE% ^
     --actions %ACTIONS% --speeds %SPEEDS% ^
     %OPTIONAL_ARGS% ^
-    > "%ROOT%\%LOG_FILE%" 2>&1
+    > "%LOG_FILE%" 2>&1
 set EXIT_CODE=%ERRORLEVEL%
-type "%ROOT%\%LOG_FILE%"
+type "%LOG_FILE%"
 echo [GC-VBench] Done. Exit: %EXIT_CODE%
 
 :: Record end time
