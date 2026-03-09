@@ -35,10 +35,11 @@ def load_text_encoder(text_encoder_type,
         text_encoder = LlavaForConditionalGeneration.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
         import transformers
         transformers_version = transformers.__version__
+        llm = getattr(text_encoder, 'language_model', None) or text_encoder.model.language_model
         if transformers_version >= "4.53.0":
-            text_encoder.final_layer_norm = text_encoder.language_model.norm
+            text_encoder.final_layer_norm = llm.norm
         else:
-            text_encoder.final_layer_norm = text_encoder.language_model.model.norm
+            text_encoder.final_layer_norm = llm.model.norm
     
     else:
         raise ValueError(f"Unsupported text encoder type: {text_encoder_type}")
