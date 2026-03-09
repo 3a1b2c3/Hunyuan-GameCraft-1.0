@@ -8,9 +8,7 @@ echo Repo:      %REPO%
 echo Local dir: %LOCAL_DIR%
 echo.
 
-huggingface-cli download %REPO% ^
-    --local-dir "%LOCAL_DIR%" ^
-    --exclude "*.metadata" ".cache/*"
+python download_model.py
 
 echo.
 echo Done. Weights in: %LOCAL_DIR%
