@@ -25,6 +25,7 @@ import csv
 import glob
 import json
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -242,7 +243,7 @@ def main():
         image_stem = os.path.splitext(image_name)[0]
 
         for sample_idx in range(args.num_samples):
-            seed = args.seed + sample_idx
+            seed = random.randint(0, 2**31 - 1)
             out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}-{seed}.mp4")
 
             if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}-*.mp4")):
