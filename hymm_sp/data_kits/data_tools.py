@@ -53,7 +53,14 @@ def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=6, f
     os.makedirs(os.path.dirname(path), exist_ok=True)
     
     # Save frames as an animated GIF/video
-    imageio.mimsave(path, outputs, fps=fps, quality=quality)
+    if path.lower().endswith('.mp4'):
+        h, w = outputs[0].shape[:2]
+        writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+        for frame in outputs:
+            writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+        writer.release()
+    else:
+        imageio.mimsave(path, outputs, fps=fps, quality=quality)
 
 
 def pad_image(crop_img, size, color=(255, 255, 255), resize_ratio=1):
