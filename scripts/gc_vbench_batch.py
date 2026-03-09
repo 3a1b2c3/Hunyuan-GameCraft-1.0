@@ -33,6 +33,26 @@ import time
 import psutil
 import torch
 
+
+class _Tee:
+    def __init__(self, stream, log_path):
+        self._stream = stream
+        self._log = open(log_path, 'w', encoding='utf-8', buffering=1)
+
+    def write(self, data):
+        self._stream.write(data)
+        self._log.write(data)
+
+    def flush(self):
+        self._stream.flush()
+        self._log.flush()
+
+    def fileno(self):
+        return self._stream.fileno()
+
+    def close(self):
+        self._log.close()
+
 # ── Default paths ──────────────────────────────────────────────────────────────
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _VBENCH_ROOT = os.path.join(_ROOT, "..", "VBench", "vbench2_beta_i2v")
@@ -82,6 +102,8 @@ def parse_args():
     p.add_argument("--actions", nargs="+", default=["w", "a", "d", "s"])
     p.add_argument("--speeds",  nargs="+", type=float, default=[0.2, 0.2, 0.2, 0.2])
     p.add_argument("--flow_shift", type=float, default=5.0)
+    p.add_argument("--log_file", default=None,
+                   help="If set, tee stdout to this log file in addition to terminal")
 
     return p.parse_args()
 
@@ -154,6 +176,9 @@ def _ram_gb():
 
 def main():
     args = parse_args()
+
+    if args.log_file:
+        sys.stdout = _Tee(sys.stdout, args.log_file)
 
     print("[GC-VBench] Flags:")
     print(f"  --vbench_output_dir  {args.vbench_output_dir}")

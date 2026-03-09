@@ -128,10 +128,9 @@ python "%ROOT%\scripts\gc_vbench_batch.py" ^
     --height %HEIGHT% --width %WIDTH% ^
     --steps %STEPS% --frames %FRAMES% --cfg_scale %CFG_SCALE% ^
     --actions %ACTIONS% --speeds %SPEEDS% ^
-    %OPTIONAL_ARGS% ^
-    > "%LOG_FILE%" 2>&1
+    --log_file "%LOG_FILE%" ^
+    %OPTIONAL_ARGS%
 set EXIT_CODE=%ERRORLEVEL%
-type "%LOG_FILE%"
 echo [GC-VBench] Done. Exit: %EXIT_CODE%
 
 :: Record end time
