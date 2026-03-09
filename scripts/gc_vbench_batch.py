@@ -272,7 +272,8 @@ def main():
 
             env = os.environ.copy()
             env.update({"PYTHONPATH": _ROOT, "DISABLE_SP": "1",
-                        "RANK": "0", "LOCAL_RANK": "0", "WORLD_SIZE": "1"})
+                        "RANK": "0", "LOCAL_RANK": "0", "WORLD_SIZE": "1",
+                        "MODEL_BASE": os.path.join(_ROOT, "weights", "stdmodels")})
 
             vram_readings = []
             stop_evt = threading.Event()
