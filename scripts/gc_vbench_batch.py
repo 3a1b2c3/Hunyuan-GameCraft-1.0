@@ -73,8 +73,8 @@ def parse_args():
     )
 
     # ── VBench / loop settings ─────────────────────────────────────────────────
-    p.add_argument("--vbench_output_dir", default="results_low_mem/videos",
-                   help="Flat output directory for VBench-named videos (default: results_low_mem/videos)")
+    p.add_argument("--vbench_output_dir", default="results_distill/videos",
+                   help="Flat output directory for VBench-named videos (default: results_distill/videos)")
     p.add_argument("--vbench_info_json", default=_DEFAULT_INFO_JSON,
                    help="Path to i2v-bench-info.json")
     p.add_argument("--crop_dir", default=_DEFAULT_CROP_DIR,
@@ -103,6 +103,8 @@ def parse_args():
     p.add_argument("--actions", nargs="+", default=["w", "a", "d", "s"])
     p.add_argument("--speeds",  nargs="+", type=float, default=[0.2, 0.2, 0.2, 0.2])
     p.add_argument("--flow_shift", type=float, default=5.0)
+    p.add_argument("--cpu_offload", action="store_true",
+                   help="Enable CPU offload during inference")
     p.add_argument("--log_file", default=None,
                    help="If set, tee stdout to this log file in addition to terminal")
 
@@ -147,7 +149,7 @@ def build_sample_cmd(args, image_path, prompt, seed, tmp_dir):
         "--flow-shift-eval-video", str(args.flow_shift),
         "--use-fp8",
         "--save-path",       tmp_dir,
-    ]
+    ] + (["--cpu-offload"] if args.cpu_offload else [])
 
 
 def _poll_vram(stop_event, readings):
@@ -244,12 +246,12 @@ def main():
 
         for sample_idx in range(args.num_samples):
             seed = random.randint(0, 2**31 - 1)
-            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}-{seed}.mp4")
+            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}_seed{seed}.mp4")
 
-            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}-*.mp4")):
+            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4")):
                 skipped += 1
                 done += 1
-                existing = glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}-*.mp4"))[0]
+                existing = glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4"))[0]
                 stats_w.writerow([task_idx, prompt, img_type, sample_idx, seed, '', '', '', '', existing, 'skipped'])
                 stats_f.flush()
                 fps_f.write(f'{task_idx+1:>4}  {prompt[:50]:<50}  {sample_idx}  {"":>6}  {"":>5}  skipped\n')
