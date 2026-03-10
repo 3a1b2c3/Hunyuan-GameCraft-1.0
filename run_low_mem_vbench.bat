@@ -130,7 +130,7 @@ if not exist "%OUTPUT_BASE%" mkdir "%OUTPUT_BASE%"
 
 echo.
 echo [GC-VBench] Generating %NUM_SAMPLES% samples per prompt...
-python "%ROOT%\scripts\gc_vbench_batch.py" ^
+python "%ROOT%\scripts\gc_vbench_inprocess.py" ^
     --vbench_output_dir "%ROOT%\%VBENCH_OUTPUT_DIR%" ^
     --ckpt "%ROOT%\%CKPT%" ^
     --neg_prompt "%NEG_PROMPT%" ^

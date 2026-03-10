@@ -246,9 +246,9 @@ def main():
 
         for sample_idx in range(args.num_samples):
             seed = random.randint(0, 2**31 - 1)
-            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}_seed{seed}.mp4")
+            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}.mp4")
 
-            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4")):
+            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}.mp4")):
                 skipped += 1
                 done += 1
                 existing = glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4"))[0]
