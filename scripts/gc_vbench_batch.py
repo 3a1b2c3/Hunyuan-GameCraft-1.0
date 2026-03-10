@@ -251,7 +251,7 @@ def main():
             if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}.mp4")):
                 skipped += 1
                 done += 1
-                existing = glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4"))[0]
+                existing = next(iter(glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}_seed*.mp4"))), out_path)
                 stats_w.writerow([task_idx, prompt, img_type, sample_idx, seed, '', '', '', '', existing, 'skipped'])
                 stats_f.flush()
                 fps_f.write(f'{task_idx+1:>4}  {prompt[:50]:<50}  {sample_idx}  {"":>6}  {"":>5}  skipped\n')
