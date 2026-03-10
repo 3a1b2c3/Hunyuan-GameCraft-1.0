@@ -42,7 +42,8 @@ echo   - VBench requires 5 samples per prompt (num_samples=5)
 echo   - Already-generated videos are skipped automatically
 echo   - Outputs: {output_base}\videos\{prompt}-{0..N-1}.mp4
 echo   - Log:     {output_base}\vbench_run.log
-echo   - Stats:   {output_base}\vbench_stats.txt
+echo   - Per-video CSV: {output_base}\vbench_stats.csv  (written by gc_vbench_batch.py)
+   - Run summary:   {output_base}\vbench_run_summary.csv
 echo.
 echo Example:
 echo   run_low_mem_vbench.bat results_low_mem 5 "abstract,background"
@@ -73,7 +74,7 @@ set IMAGE_TYPES=%~3
 if "%IMAGE_TYPES%"=="" set IMAGE_TYPES=scenery,indoor
 
 set VBENCH_OUTPUT_DIR=%OUTPUT_BASE%\videos
-set STATS_FILE=%OUTPUT_BASE%\vbench_stats.txt
+set STATS_FILE=%OUTPUT_BASE%\vbench_run_summary.csv
 
 set ROOT=%~dp0
 if "%ROOT:~-1%"=="\" set ROOT=%ROOT:~0,-1%
@@ -101,13 +102,21 @@ echo   actions   : %ACTIONS%  speeds: %SPEEDS%
 echo ============================================================
 
 :: Snapshot GPU before
-set GPU_INFO_BEFORE=N/A
+set VRAM_USED_BEFORE=N/A
+set VRAM_TOTAL=N/A
 where nvidia-smi >nul 2>&1
 if %ERRORLEVEL%==0 (
-    for /f "skip=1 tokens=1,2,3 delims=, " %%a in ('nvidia-smi --query-gpu^=name^,memory.used^,memory.total --format^=csv^,noheader') do (
-        set GPU_INFO_BEFORE=%%a  used=%%b  total=%%c
+    for /f "skip=1 tokens=1,2 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used^,memory.total --format^=csv^,noheader^,nounits') do (
+        set VRAM_USED_BEFORE=%%a
+        set VRAM_TOTAL=%%b
     )
 )
+
+:: Snapshot RAM before
+set RAM_FREE_BEFORE_MB=N/A
+set RAM_TOTAL_MB=N/A
+for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul') do if not "%%a"=="" set /a RAM_FREE_BEFORE_MB=%%a/1024
+for /f "tokens=2 delims==" %%a in ('wmic OS get TotalVisibleMemorySize /value 2^>nul') do if not "%%a"=="" set /a RAM_TOTAL_MB=%%a/1024
 
 :: Record start time
 set START_TIME=%TIME%
@@ -143,48 +152,36 @@ set /a ELAPSED_M=(ELAPSED%%3600)/60
 set /a ELAPSED_SS=ELAPSED%%60
 
 :: Snapshot GPU after
-set GPU_INFO_AFTER=N/A
+set VRAM_USED_AFTER=N/A
 where nvidia-smi >nul 2>&1
 if %ERRORLEVEL%==0 (
-    for /f "skip=1 tokens=1,2,3 delims=, " %%a in ('nvidia-smi --query-gpu^=name^,memory.used^,memory.total --format^=csv^,noheader') do (
-        set GPU_INFO_AFTER=%%a  used=%%b  total=%%c
+    for /f "skip=1 tokens=1 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used --format^=csv^,noheader^,nounits') do (
+        set VRAM_USED_AFTER=%%a
     )
 )
+
+:: Snapshot RAM after
+set RAM_FREE_AFTER_MB=N/A
+for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul') do if not "%%a"=="" set /a RAM_FREE_AFTER_MB=%%a/1024
+
+:: Count generated videos and estimate FPS
+set VIDEO_COUNT=0
+for /f %%a in ('dir /b /s "%VBENCH_OUTPUT_DIR%\*.mp4" 2^>nul ^| find /c /v ""') do set VIDEO_COUNT=%%a
+set /a TOTAL_FRAMES_GEN=VIDEO_COUNT*FRAMES
+set EST_FPS=0
+if %ELAPSED% gtr 0 set /a EST_FPS=TOTAL_FRAMES_GEN/ELAPSED
 
 echo ============================================================
 echo Done. Elapsed: %ELAPSED_H%h %ELAPSED_M%m %ELAPSED_SS%s  Exit: %EXIT_CODE%
 echo Stats: %STATS_FILE%
 echo ============================================================
 
-(
-    echo GameCraft VBench Batch Stats
-    echo ============================
-    echo Date:           %DATE%
-    echo Start:          %START_TIME%
-    echo End:            %END_TIME%
-    echo Elapsed:        %ELAPSED_H%h %ELAPSED_M%m %ELAPSED_SS%s ^(%ELAPSED%s^)
-    echo Exit code:      %EXIT_CODE%
-    echo.
-    echo === Settings ===
-    echo Checkpoint:     %CKPT%
-    echo Num samples:    %NUM_SAMPLES%
-    echo Image types:    %IMAGE_TYPES%
-    echo Resolution:     %RESOLUTION%
-    echo Size:           %HEIGHT%x%WIDTH%
-    echo Steps:          %STEPS%
-    echo Frames:         %FRAMES%
-    echo Seed:           %SEED%
-    echo.
-    echo === GPU ===
-    echo GPU before:     %GPU_INFO_BEFORE%
-    echo GPU after:      %GPU_INFO_AFTER%
-    echo.
-    echo === Output ===
-    echo Output base:    %OUTPUT_BASE%
-    echo VBench videos:  %VBENCH_OUTPUT_DIR%
-    echo Log:            %LOG_FILE%
-    echo FPS log:        %OUTPUT_BASE%\vbench_fps.txt
-    echo Stats CSV:      %OUTPUT_BASE%\vbench_stats.csv
-) > "%STATS_FILE%"
+:: Write CSV header if file does not exist yet
+if not exist "%STATS_FILE%" (
+    echo date,start,end,elapsed_s,exit_code,ckpt,num_samples,image_types,height,width,steps,frames,seed,vram_used_before_mib,vram_total_mib,vram_used_after_mib,ram_free_before_mb,ram_total_mb,ram_free_after_mb,videos_generated,est_fps,output_base,log_file >> "%STATS_FILE%"
+)
+
+:: Append one data row
+echo %DATE%,%START_TIME%,%END_TIME%,%ELAPSED%,%EXIT_CODE%,%CKPT%,%NUM_SAMPLES%,%IMAGE_TYPES%,%HEIGHT%,%WIDTH%,%STEPS%,%FRAMES%,%SEED%,%VRAM_USED_BEFORE%,%VRAM_TOTAL%,%VRAM_USED_AFTER%,%RAM_FREE_BEFORE_MB%,%RAM_TOTAL_MB%,%RAM_FREE_AFTER_MB%,%VIDEO_COUNT%,%EST_FPS%,%OUTPUT_BASE%,%LOG_FILE% >> "%STATS_FILE%"
 
 exit /b %EXIT_CODE%
