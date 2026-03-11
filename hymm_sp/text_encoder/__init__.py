@@ -34,7 +34,7 @@ def load_text_encoder(text_encoder_type,
         text_encoder = CLIPTextModel.from_pretrained(text_encoder_path)
         text_encoder.final_layer_norm = text_encoder.text_model.final_layer_norm
     elif text_encoder_type == "llava-llama-3-8b":
-        text_encoder = LlavaForConditionalGeneration.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
+        text_encoder = LlavaForConditionalGeneration.from_pretrained(text_encoder_path, low_cpu_mem_usage=True, local_files_only=True)
         import transformers
         transformers_version = transformers.__version__
         llm = getattr(text_encoder, 'language_model', None) or text_encoder.model.language_model
