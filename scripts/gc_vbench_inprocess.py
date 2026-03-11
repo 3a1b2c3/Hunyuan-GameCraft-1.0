@@ -68,6 +68,9 @@ class _Tee:
     def fileno(self):
         return self._stream.fileno()
 
+    def isatty(self):
+        return False
+
     def close(self):
         self._log.close()
 
