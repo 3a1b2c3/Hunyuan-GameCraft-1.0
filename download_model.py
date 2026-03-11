@@ -9,6 +9,8 @@ REPO_ID    = "tencent/Hunyuan-GameCraft-1.0"
 CKPT_FILES = [
     "gamecraft_models/mp_rank_00_model_states.pt",
     "gamecraft_models/mp_rank_00_model_states_distill.pt",
+    "vae_3d/hyvae/config.json",
+    "vae_3d/hyvae/pytorch_model.pt",
 ]
 local_dir = Path(__file__).parent / "weights"
 
