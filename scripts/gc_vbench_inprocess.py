@@ -317,6 +317,7 @@ def main():
         sys.exit(1)
 
     entries = load_vbench_entries(info_json, args.image_types)
+    entries = list(reversed(entries))
     total   = len(entries) * args.num_samples
     print(f"[GC-VBench-IP] {len(entries)} prompts × {args.num_samples} samples = {total} videos\n")
 
