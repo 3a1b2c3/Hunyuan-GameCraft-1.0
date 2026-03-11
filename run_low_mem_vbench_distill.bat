@@ -55,7 +55,7 @@ exit /b 0
 
 :run
 :: ── configurable defaults ──────────────────────────────────────────────────
-set CKPT=weights\gamecraft_models\mp_rank_00_model_states.pt
+set CKPT=weights\gamecraft_models\mp_rank_00_model_states_distill.pt
 set NEG_PROMPT=overexposed, low quality, deformation, a poor composition, bad hands, bad teeth, bad eyes, bad limbs, distortion, blurring, text, subtitles, static, picture, black border.
 set HEIGHT=720
 set WIDTH=960
