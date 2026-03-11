@@ -113,6 +113,7 @@ def parse_args():
     p.add_argument("--speeds",  nargs="+", type=float, default=[0.2, 0.2, 0.2, 0.2])
     p.add_argument("--flow_shift", type=float, default=5.0)
     p.add_argument("--cpu_offload", action="store_true")
+    p.add_argument("--skip_first", type=int, default=0, help="Skip first N prompts")
     p.add_argument("--log_file", default=None)
     return p.parse_args()
 
@@ -317,6 +318,8 @@ def main():
         sys.exit(1)
 
     entries = load_vbench_entries(info_json, args.image_types)
+    if args.skip_first:
+        entries = entries[args.skip_first:]
     total   = len(entries) * args.num_samples
     print(f"[GC-VBench-IP] {len(entries)} prompts × {args.num_samples} samples = {total} videos\n")
 
