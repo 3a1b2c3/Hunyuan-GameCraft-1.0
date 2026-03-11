@@ -8,8 +8,8 @@ cd /d "%~dp0"
 
 setlocal enabledelayedexpansion
 
-:: Default MODEL_BASE to weights\ inside the repo if not already set
-if "%MODEL_BASE%"=="" set MODEL_BASE=%~dp0weights
+:: Default MODEL_BASE to weights\stdmodels inside the repo if not already set
+if "%MODEL_BASE%"=="" set MODEL_BASE=%~dp0weights\stdmodels
 
 :: --help
 if /i "%~1"=="--help" goto :help

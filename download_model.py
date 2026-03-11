@@ -35,7 +35,7 @@ VAE_FILES = [
     "hunyuan-video-i2v-720p/vae/config.json",
     "hunyuan-video-i2v-720p/vae/pytorch_model.pt",
 ]
-VAE_LOCAL = local_dir / "vae_3d" / "hyvae"
+VAE_LOCAL = local_dir / "stdmodels" / "vae_3d" / "hyvae"
 VAE_LOCAL.mkdir(parents=True, exist_ok=True)
 
 print(f"\nDownloading VAE from {VAE_REPO} -> {VAE_LOCAL}")
