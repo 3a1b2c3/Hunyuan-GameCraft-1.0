@@ -1,50 +1,74 @@
 """
 Download Hunyuan-GameCraft-1.0 weights from HuggingFace.
 Run from the repo root: python download_model.py
+
+Set HF_TOKEN env var if the repo requires authentication:
+  set HF_TOKEN=hf_...
+  python download_model.py
 """
+import os
 from pathlib import Path
 from huggingface_hub import snapshot_download, hf_hub_download
 
-REPO_ID    = "tencent/Hunyuan-GameCraft-1.0"
-CKPT_FILES = [
-    "gamecraft_models/mp_rank_00_model_states.pt",
-    "gamecraft_models/mp_rank_00_model_states_distill.pt",
-    "vae_3d/hyvae/config.json",
-    "vae_3d/hyvae/pytorch_model.pt",
-]
+token = os.environ.get("HF_TOKEN") or None
+
 local_dir = Path(__file__).parent / "weights"
 
-print(f"Downloading {REPO_ID} -> {local_dir}")
+# --- GameCraft model checkpoints ---
+GAMECRAFT_REPO = "tencent/Hunyuan-GameCraft-1.0"
+GAMECRAFT_FILES = [
+    "gamecraft_models/mp_rank_00_model_states.pt",
+    "gamecraft_models/mp_rank_00_model_states_distill.pt",
+]
+
+print(f"Downloading {GAMECRAFT_REPO} -> {local_dir}")
 snapshot_download(
-    repo_id=REPO_ID,
+    repo_id=GAMECRAFT_REPO,
     local_dir=str(local_dir),
     ignore_patterns=["*.metadata", ".cache/*"],
+    token=token,
 )
 
-# Verify checkpoints; retry individually if missing
-for CKPT_FILE in CKPT_FILES:
-    ckpt = local_dir / CKPT_FILE
-    if not ckpt.exists():
-        print(f"\nWARNING: {CKPT_FILE} not found after snapshot_download.")
-        print("Retrying with direct file download...")
-        ckpt.parent.mkdir(parents=True, exist_ok=True)
-        hf_hub_download(
-            repo_id=REPO_ID,
-            filename=CKPT_FILE,
-            local_dir=str(local_dir),
-        )
+# --- VAE from HunyuanVideo ---
+VAE_REPO  = "tencent/HunyuanVideo"
+VAE_FILES = [
+    "ckpts/vae/config.json",
+    "ckpts/vae/pytorch_model.pt",
+]
+VAE_LOCAL = local_dir / "vae_3d" / "hyvae"
+VAE_LOCAL.mkdir(parents=True, exist_ok=True)
 
+print(f"\nDownloading VAE from {VAE_REPO} -> {VAE_LOCAL}")
+for vae_file in VAE_FILES:
+    dest = VAE_LOCAL / Path(vae_file).name
+    if dest.exists():
+        print(f"  already exists: {dest.name}")
+        continue
+    print(f"  fetching {vae_file} ...")
+    hf_hub_download(
+        repo_id=VAE_REPO,
+        filename=vae_file,
+        local_dir=str(VAE_LOCAL),
+        local_dir_use_symlinks=False,
+        token=token,
+    )
+
+ALL_FILES = [(local_dir, f) for f in GAMECRAFT_FILES] + \
+            [(VAE_LOCAL, Path(f).name) for f in VAE_FILES]
+
+# Verify all files
+print()
+for base, rel in ALL_FILES:
+    ckpt = base / rel
     if ckpt.exists():
         size_gb = ckpt.stat().st_size / 1024**3
         if size_gb < 0.01:
-            print(f"\nERROR: {ckpt.name} is only {ckpt.stat().st_size} bytes — looks like an LFS pointer.")
-            print("Install git-lfs (https://git-lfs.com) and run: git lfs pull")
+            print(f"ERROR: {ckpt.name} is only {ckpt.stat().st_size} bytes — looks like an LFS pointer.")
         else:
-            print(f"\nOK: {CKPT_FILE}  ({size_gb:.2f} GB)")
+            print(f"OK: {rel}  ({size_gb:.2f} GB)")
     else:
-        print(f"\nERROR: {CKPT_FILE} still missing after retry.")
+        print(f"ERROR: {rel} still missing.")
 
-# List all downloaded files
 print(f"\nAll files in {local_dir}:")
 for f in sorted(local_dir.rglob("*")):
     if f.is_file():
