@@ -54,6 +54,8 @@ def load_vae(vae_type,
         if "state_dict" in ckpt:
             ckpt = ckpt["state_dict"]
         vae_ckpt = {k.replace("vae.", ""): v for k, v in ckpt.items() if k.startswith("vae.")}
+        if not vae_ckpt:
+            vae_ckpt = ckpt  # checkpoint keys already in model format (no "vae." prefix)
         vae.load_state_dict(vae_ckpt)
 
         spatial_compression_ratio = vae.config.spatial_compression_ratio
