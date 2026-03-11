@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from copy import deepcopy
+from pathlib import Path
 
 import torch, os
 import torch.nn as nn
@@ -25,6 +26,7 @@ def load_text_encoder(text_encoder_type,
                       ):
     if text_encoder_path is None:
         text_encoder_path = TEXT_ENCODER_PATH[text_encoder_type]
+    text_encoder_path = Path(text_encoder_path)
     if logger is not None:
         logger.info(f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}")
 
