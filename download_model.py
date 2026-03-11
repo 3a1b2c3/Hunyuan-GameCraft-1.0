@@ -30,10 +30,10 @@ snapshot_download(
 )
 
 # --- VAE from HunyuanVideo ---
-VAE_REPO  = "tencent/HunyuanVideo"
+VAE_REPO  = "tencent/HunyuanVideo-I2V"
 VAE_FILES = [
-    "hunyuan-video-t2v-720p/vae/config.json",
-    "hunyuan-video-t2v-720p/vae/pytorch_model.pt",
+    "hunyuan-video-i2v-720p/vae/config.json",
+    "hunyuan-video-i2v-720p/vae/pytorch_model.pt",
 ]
 VAE_LOCAL = local_dir / "vae_3d" / "hyvae"
 VAE_LOCAL.mkdir(parents=True, exist_ok=True)
