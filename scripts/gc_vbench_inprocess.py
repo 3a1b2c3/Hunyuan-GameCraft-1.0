@@ -30,6 +30,9 @@ import sys
 import threading
 import time
 
+# Ensure repo root is on sys.path so hymm_sp is importable when called via absolute path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import psutil
 import torch
 import torchvision.transforms as transforms
