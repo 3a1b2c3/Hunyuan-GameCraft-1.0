@@ -317,7 +317,6 @@ def main():
         sys.exit(1)
 
     entries = load_vbench_entries(info_json, args.image_types)
-    entries = list(reversed(entries))
     total   = len(entries) * args.num_samples
     print(f"[GC-VBench-IP] {len(entries)} prompts × {args.num_samples} samples = {total} videos\n")
 
@@ -334,9 +333,9 @@ def main():
 
         for sample_idx in range(args.num_samples):
             seed     = random.randint(0, 2**31 - 1)
-            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}.mp4")
+            out_path = os.path.join(out_dir, f"{prompt}-{sample_idx}_seed{seed}.mp4")
 
-            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}.mp4")):
+            if glob.glob(os.path.join(out_dir, f"{prompt}-{sample_idx}*.mp4")):
                 skipped += 1
                 done    += 1
                 stats_w.writerow([task_idx, prompt, img_type, sample_idx, seed,
