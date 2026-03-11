@@ -39,19 +39,21 @@ VAE_LOCAL = local_dir / "vae_3d" / "hyvae"
 VAE_LOCAL.mkdir(parents=True, exist_ok=True)
 
 print(f"\nDownloading VAE from {VAE_REPO} -> {VAE_LOCAL}")
+import shutil, tempfile
 for vae_file in VAE_FILES:
     dest = VAE_LOCAL / Path(vae_file).name
     if dest.exists():
         print(f"  already exists: {dest.name}")
         continue
     print(f"  fetching {vae_file} ...")
-    hf_hub_download(
-        repo_id=VAE_REPO,
-        filename=vae_file,
-        local_dir=str(VAE_LOCAL),
-        local_dir_use_symlinks=False,
-        token=token,
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        downloaded = hf_hub_download(
+            repo_id=VAE_REPO,
+            filename=vae_file,
+            local_dir=tmp,
+            token=token,
+        )
+        shutil.copy2(downloaded, dest)
 
 ALL_FILES = [(local_dir, f) for f in GAMECRAFT_FILES] + \
             [(VAE_LOCAL, Path(f).name) for f in VAE_FILES]
