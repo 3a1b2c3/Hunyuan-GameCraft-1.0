@@ -109,7 +109,7 @@ set VRAM_USED_BEFORE=N/A
 set VRAM_TOTAL=N/A
 where nvidia-smi >nul 2>&1
 if %ERRORLEVEL%==0 (
-    for /f "skip=1 tokens=1,2 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used^,memory.total --format^=csv^,noheader^,nounits') do (
+    for /f "tokens=1,3 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used^,memory.total --format^=csv^,noheader^,nounits') do (
         set VRAM_USED_BEFORE=%%a
         set VRAM_TOTAL=%%b
     )
@@ -118,8 +118,8 @@ if %ERRORLEVEL%==0 (
 :: Snapshot RAM before
 set RAM_FREE_BEFORE_MB=N/A
 set RAM_TOTAL_MB=N/A
-for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul') do if not "%%a"=="" set /a RAM_FREE_BEFORE_MB=%%a/1024
-for /f "tokens=2 delims==" %%a in ('wmic OS get TotalVisibleMemorySize /value 2^>nul') do if not "%%a"=="" set /a RAM_TOTAL_MB=%%a/1024
+for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul ^| findstr /r "[0-9]"') do if not "%%a"=="" set /a RAM_FREE_BEFORE_MB=%%a/1024
+for /f "tokens=2 delims==" %%a in ('wmic OS get TotalVisibleMemorySize /value 2^>nul ^| findstr /r "[0-9]"') do if not "%%a"=="" set /a RAM_TOTAL_MB=%%a/1024
 
 :: Record start time
 set START_TIME=%TIME%
@@ -158,14 +158,14 @@ set /a ELAPSED_SS=ELAPSED%%60
 set VRAM_USED_AFTER=N/A
 where nvidia-smi >nul 2>&1
 if %ERRORLEVEL%==0 (
-    for /f "skip=1 tokens=1 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used --format^=csv^,noheader^,nounits') do (
+    for /f "tokens=1 delims=, " %%a in ('nvidia-smi --query-gpu^=memory.used --format^=csv^,noheader^,nounits') do (
         set VRAM_USED_AFTER=%%a
     )
 )
 
 :: Snapshot RAM after
 set RAM_FREE_AFTER_MB=N/A
-for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul') do if not "%%a"=="" set /a RAM_FREE_AFTER_MB=%%a/1024
+for /f "tokens=2 delims==" %%a in ('wmic OS get FreePhysicalMemory /value 2^>nul ^| findstr /r "[0-9]"') do if not "%%a"=="" set /a RAM_FREE_AFTER_MB=%%a/1024
 
 :: Count generated videos and estimate FPS
 set VIDEO_COUNT=0
